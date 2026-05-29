@@ -1,6 +1,6 @@
 import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
-export const bet = pgTable("bets", {
+export const bets = pgTable("bets", {
     id: serial("id").primaryKey(),
     username: text("username").notNull(),
     guessDeaths: integer("guess_deaths").notNull(),
@@ -19,3 +19,11 @@ export const run = pgTable("run", {
     deathCount: integer("death_count").notNull().default(0),
     heartCount: integer("heart_count"),
 })
+
+export type Bet = typeof bets.$inferSelect
+export type NewBet = typeof bets.$inferInsert
+
+export type Run = typeof run.$inferSelect
+export type NewRun = typeof run.$inferInsert
+
+

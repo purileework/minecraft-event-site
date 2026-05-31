@@ -1,82 +1,82 @@
 "use server"
 
 import { db } from "@/db";
-import { bets, type Bet, type NewBet } from "@/db/schema";
+import { bets, run, type Bet, type NewBet } from "@/db/schema";
+import { BetFormSchema, BetFormSchemaType } from "@/lib/schema";
 import { count, desc, eq } from "drizzle-orm";
 import { refresh } from "next/cache";
+import { z } from "zod"
 
-export type BetValues = {
-    deaths: string;
-    hearts: string;
-    hours: string;
-    minutes: string;
-    seconds: string;
-};
+export type FieldErrors = Partial<Record<keyof BetFormSchemaType, string[]>>;
 
-type Result =
-    | { success: true }
-    | { success: false; error: string }
-
-
-export type FieldErrors = Partial<Record<keyof BetValues, string>>;
+export type BetFormValues = {
+    guessDeaths?: string
+    guessHearts?: string
+    hours?: string
+    minutes?: string
+    seconds?: string
+}
 
 export type FormState = {
     error?: string;
     success?: boolean;
-    values?: BetValues;
+    values?: BetFormValues;
     errors?: FieldErrors;
 };
-
-// non-negative integer
-function parseCount(raw: string): number | null {
-    if (raw.trim() === "") return null;
-    const n = Number(raw);
-    if (!Number.isInteger(n) || n < 0) return null;
-    return n;
-}
 
 export async function submitBet(
     _prevState: FormState,
     formData: FormData,
 ): Promise<FormState> {
-    const values: BetValues = {
-        deaths: String(formData.get("deaths") ?? ""),
-        hearts: String(formData.get("hearts") ?? ""),
-        hours: String(formData.get("hours") ?? ""),
-        minutes: String(formData.get("minutes") ?? ""),
-        seconds: String(formData.get("seconds") ?? ""),
-    };
+    const runs = await db.select().from(run).limit(1)
+    const currentRun = runs[0]
 
+    if (!currentRun) {
+        return { success: false, error: "Run not initialized" }
+    }
+    const betsClosed = currentRun.netherEnterTime !== null
 
-    const deaths = parseCount(values.deaths);
-    const hearts = parseCount(values.hearts);
-    const hours = parseCount(values.hours);
-    const minutes = parseCount(values.minutes);
-    const seconds = parseCount(values.seconds);
-
-    const errors: FieldErrors = {};
-    if (deaths === null) errors.deaths = "Enter a whole number ≥ 0";
-    if (hearts === null) errors.hearts = "Enter a whole number ≥ 0";
-    if (hours === null) errors.hours = "Enter a whole number ≥ 0";
-    if (minutes === null) errors.minutes = "Enter a whole number ≥ 0";
-    if (seconds === null) errors.seconds = "Enter a whole number ≥ 0";
-
-    if (deaths === null || hearts === null || hours === null || seconds === null || minutes === null) {
-        return { success: false, values, errors };
+    if (betsClosed) {
+        return {
+            success: false,
+            error: "Bets are closed c:<"
+        }
     }
 
+    const raw = Object.fromEntries(formData)
+    const parsed = BetFormSchema.safeParse({
+        guessDeaths: parseInt(raw.guessDeaths as string),
+        guessHearts: parseInt(raw.guessHearts as string),
+        hours: parseInt(raw.hours as string),
+        minutes: parseInt(raw.minutes as string),
+        seconds: parseInt(raw.seconds as string),
+    })
+
+    if (!parsed.success) {
+        return {
+            success: false,
+            values: raw,
+            errors: z.flattenError(parsed.error).fieldErrors
+        }
+    }
+
+    const { hours, minutes, seconds, ...rest } = parsed.data
     const newBet: NewBet = {
-        username: "temp-player", // TODO: pull from auth/session
-        guessDeaths: deaths,
-        guessHearts: hearts,
-        guessTime: (hours * 3600) + (minutes * 60) + seconds,
-    };
+        username: "temp-player",
+        ...rest,
+        guessTime: hours * 3600 + minutes * 60 + seconds,
+    }
 
-    await db.insert(bets).values(newBet);
-    refresh()
-    return { success: true, values };
+
+    try {
+        await db.insert(bets).values(newBet)
+        refresh()
+        return { success: true }
+    } catch (e) {
+        console.error("submitBet failed:", e)
+        return { success: false, error: "Something went wrong. Please try again." }
+    }
 }
-
 
 export type ViewerBet = {
     latest: Bet;
@@ -85,7 +85,6 @@ export type ViewerBet = {
 
 export async function getViewerBet(): Promise<ViewerBet> {
     const session = { username: "temp-player" };
-
 
     const [latest] = await db.select().from(bets)
         .where(eq(bets.username, session.username))
@@ -97,6 +96,11 @@ export async function getViewerBet(): Promise<ViewerBet> {
     return { latest: latest ?? null, count: value };
 
 }
+
+type Result =
+    | { success: true }
+    | { success: false; error: string }
+
 
 export async function resetBets(): Promise<Result> {
     const session = { username: "temp-player" }

@@ -1,6 +1,7 @@
 "use client";
 
-import { submitBet, type BetValues, type FormState } from "@/actions/bet";
+import type { BetFormSchemaType } from "@/lib/schema";
+import { submitBet, type FormState } from "@/actions/bet";
 import { useActionState, useEffect } from "react";
 
 import {
@@ -15,7 +16,7 @@ import { Button } from "../ui/button";
 const initialState: FormState = {};
 
 type BetFormProps = {
-  initial?: Partial<BetValues>;
+  initial?: Partial<BetFormSchemaType>;
   onSuccessAction?: () => void;
 };
 
@@ -35,19 +36,19 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
         <Field>
           <FieldLabel>Deaths</FieldLabel>
           <Input
-            name="deaths"
-            defaultValue={state.values?.deaths ?? initial?.deaths}
+            name="guessDeaths"
+            defaultValue={state.values?.guessDeaths ?? initial?.guessDeaths}
           />
-          <FieldError>{state.errors?.deaths}</FieldError>
+          <FieldError>{state.errors?.guessDeaths?.[0]}</FieldError>
         </Field>
 
         <Field>
           <FieldLabel>Hearts</FieldLabel>
           <Input
-            name="hearts"
-            defaultValue={state.values?.hearts ?? initial?.hearts}
+            name="guessHearts"
+            defaultValue={state.values?.guessHearts ?? initial?.guessHearts}
           />
-          <FieldError>{state.errors?.hearts}</FieldError>
+          <FieldError>{state.errors?.guessHearts?.[0]}</FieldError>
         </Field>
 
         <Field>
@@ -59,7 +60,7 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
                 defaultValue={state.values?.hours ?? initial?.hours}
               />
               <FieldDescription>Hours</FieldDescription>
-              <FieldError>{state.errors?.hours}</FieldError>
+              <FieldError>{state.errors?.hours?.[0]}</FieldError>
             </div>
 
             <div>
@@ -68,7 +69,7 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
                 defaultValue={state.values?.minutes ?? initial?.minutes}
               />
               <FieldDescription>Minutes</FieldDescription>
-              <FieldError>{state.errors?.minutes}</FieldError>
+              <FieldError>{state.errors?.minutes?.[0]}</FieldError>
             </div>
 
             <div>
@@ -77,14 +78,13 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
                 defaultValue={state.values?.seconds ?? initial?.seconds}
               />
               <FieldDescription>Seconds</FieldDescription>
-              <FieldError>{state.errors?.seconds}</FieldError>
+              <FieldError>{state.errors?.seconds?.[0]}</FieldError>
             </div>
           </div>
-
-          <Button disabled={isPending}>
-            {isPending ? "Saving..." : "Make Prediction c:"}
-          </Button>
         </Field>
+        <Button disabled={isPending}>
+          {isPending ? "Saving..." : "Make Prediction c:"}
+        </Button>
       </form>
     </div>
   );

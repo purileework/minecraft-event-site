@@ -42,11 +42,11 @@ export default function BetCard({ bet }: { bet: ViewerBet }) {
         <BetForm
           onSuccessAction={() => setEditing(false)}
           initial={{
-            deaths: String(bet.latest.guessDeaths),
-            hearts: String(bet.latest.guessHearts),
-            hours: String(latestTime.hours),
-            minutes: String(latestTime.minutes),
-            seconds: String(latestTime.seconds),
+            guessDeaths: bet.latest.guessDeaths,
+            guessHearts: bet.latest.guessHearts,
+            hours: latestTime.hours,
+            minutes: latestTime.minutes,
+            seconds: latestTime.seconds,
           }}
         />
         <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>

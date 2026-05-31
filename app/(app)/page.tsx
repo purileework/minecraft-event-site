@@ -1,6 +1,7 @@
 import { getViewerBet } from "@/actions/bet";
 import BetForm from "@/components/bet/bet-form";
 import BetView from "@/components/bet/bet-view";
+import Leaderboard from "@/components/leaderboard/leaderboard";
 
 export default async function Home() {
   const viewerBet = await getViewerBet();
@@ -16,7 +17,7 @@ export default async function Home() {
           <BetView />
         </div>
       )}
-      <div>leaderboard</div>
+      <Leaderboard />
     </div>
   );
 }

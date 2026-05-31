@@ -12,11 +12,11 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import BetForm from "./bet-form";
 import { resetBets, type ViewerBet } from "@/actions/bet";
-import { splitTime } from "@/lib/utils";
+import { formatTime, splitTime } from "@/lib/utils";
 
 export default function BetCard({ bet }: { bet: ViewerBet }) {
   const [editing, setEditing] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   let latestTime;
 
   if (bet.count == 0) {
@@ -81,7 +81,7 @@ export default function BetCard({ bet }: { bet: ViewerBet }) {
         <Label>Deaths</Label>
         <span>{bet.latest.guessDeaths}</span>
         <Label>Time</Label>
-        <span>{`${latestTime.hours}:${latestTime.minutes}:${latestTime.seconds}`}</span>
+        <span>{formatTime(bet.latest.guessTime)}</span>
       </CardContent>
     </Card>
   );

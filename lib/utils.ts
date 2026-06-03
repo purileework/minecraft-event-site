@@ -19,3 +19,9 @@ export function formatTime(totalSeconds: number) {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
+
+export function formatDateTime(date: Date) {
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${month} ${date.getDate()} ${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}

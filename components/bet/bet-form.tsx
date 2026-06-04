@@ -3,17 +3,36 @@
 import type { BetFormSchemaType } from "@/lib/schema";
 import { submitBet, type FormState } from "@/actions/bet";
 import { useActionState, useEffect } from "react";
-
 import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+  McPanel,
+  McHeading,
+  McLabel,
+  McInput,
+  McButton,
+  mcErrorClass,
+} from "@/components/ui/mc";
 
 const initialState: FormState = {};
+
+function FieldRow({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-black/15 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <McLabel>{label}</McLabel>
+        {children}
+      </div>
+      {error && <span className={mcErrorClass}>{error}</span>}
+    </div>
+  );
+}
 
 type BetFormProps = {
   initial?: Partial<BetFormSchemaType>;
@@ -31,61 +50,60 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
   }, [state.success, onSuccessAction]);
 
   return (
-    <div>
-      <form action={formAction}>
-        <Field>
-          <FieldLabel>Deaths</FieldLabel>
-          <Input
+    <McPanel>
+      <McHeading className="mb-4">Make a Prediction</McHeading>
+
+      {state.error && <p className={mcErrorClass}>{state.error}</p>}
+
+      <form action={formAction} className="flex flex-col">
+        <FieldRow label="Deaths" error={state.errors?.guessDeaths?.[0]}>
+          <McInput
             name="guessDeaths"
+            className="w-24 text-right"
             defaultValue={state.values?.guessDeaths ?? initial?.guessDeaths}
           />
-          <FieldError>{state.errors?.guessDeaths?.[0]}</FieldError>
-        </Field>
+        </FieldRow>
 
-        <Field>
-          <FieldLabel>Hearts</FieldLabel>
-          <Input
+        <FieldRow label="Hearts" error={state.errors?.guessHearts?.[0]}>
+          <McInput
             name="guessHearts"
+            type="number"
+            step="0.5"
+            min={0}
+            max={10}
+            className="w-24 text-right"
             defaultValue={state.values?.guessHearts ?? initial?.guessHearts}
           />
-          <FieldError>{state.errors?.guessHearts?.[0]}</FieldError>
-        </Field>
+        </FieldRow>
 
-        <Field>
-          <FieldLabel>Time</FieldLabel>
-          <div className="flex gap-2">
-            <div>
-              <Input
-                name="hours"
-                defaultValue={state.values?.hours ?? initial?.hours}
+        <FieldRow
+          label="Time"
+          error={
+            state.errors?.hours?.[0] ??
+            state.errors?.minutes?.[0] ??
+            state.errors?.seconds?.[0]
+          }
+        >
+          <div className="flex gap-1">
+            {(["hours", "minutes", "seconds"] as const).map((name) => (
+              <McInput
+                key={name}
+                name={name}
+                className="w-12 text-center"
+                placeholder={name[0]}
+                defaultValue={
+                  state.values?.[name] ??
+                  initial?.[name as keyof BetFormSchemaType]
+                }
               />
-              <FieldDescription>Hours</FieldDescription>
-              <FieldError>{state.errors?.hours?.[0]}</FieldError>
-            </div>
-
-            <div>
-              <Input
-                name="minutes"
-                defaultValue={state.values?.minutes ?? initial?.minutes}
-              />
-              <FieldDescription>Minutes</FieldDescription>
-              <FieldError>{state.errors?.minutes?.[0]}</FieldError>
-            </div>
-
-            <div>
-              <Input
-                name="seconds"
-                defaultValue={state.values?.seconds ?? initial?.seconds}
-              />
-              <FieldDescription>Seconds</FieldDescription>
-              <FieldError>{state.errors?.seconds?.[0]}</FieldError>
-            </div>
+            ))}
           </div>
-        </Field>
-        <Button disabled={isPending}>
+        </FieldRow>
+
+        <McButton type="submit" disabled={isPending} className="mt-4 w-full">
           {isPending ? "Saving..." : "Make Prediction c:"}
-        </Button>
+        </McButton>
       </form>
-    </div>
+    </McPanel>
   );
 }

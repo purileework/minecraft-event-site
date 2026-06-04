@@ -1,30 +1,20 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
 import BetForm from "./bet-form";
 import { resetBets, type ViewerBet } from "@/actions/bet";
-import { formatTime, splitTime } from "@/lib/utils";
+import { formatHearts, formatTime, splitTime } from "@/lib/utils";
+import { McPanel, McHeading, McButton, McStat } from "@/components/ui/mc";
 
 export default function BetCard({ bet }: { bet: ViewerBet }) {
   const [editing, setEditing] = useState(false);
   const [_isPending, startTransition] = useTransition();
-  let latestTime;
 
   if (bet.count == 0) {
     return <>no bets found</>;
-  } else {
-    latestTime = splitTime(bet.latest.guessTime);
   }
 
+  const latestTime = splitTime(bet.latest.guessTime);
   const canEdit = bet.count < 3;
 
   const handleClear = () => {
@@ -38,51 +28,51 @@ export default function BetCard({ bet }: { bet: ViewerBet }) {
 
   if (editing) {
     return (
-      <div>
+      <div className="flex flex-col gap-2">
         <BetForm
           onSuccessAction={() => setEditing(false)}
           initial={{
             guessDeaths: bet.latest.guessDeaths,
-            guessHearts: bet.latest.guessHearts,
+            guessHearts: bet.latest.guessHearts / 2,
             hours: latestTime.hours,
             minutes: latestTime.minutes,
             seconds: latestTime.seconds,
           }}
         />
-        <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+        <McButton onClick={() => setEditing(false)} className="self-center">
           Cancel
-        </Button>
+        </McButton>
       </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Prediction</CardTitle>
-        <CardAction>
-          <span>{`${bet.count}/3`}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canEdit}
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleClear}>
-            Clear
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <Label>Hearts</Label>
-        <span>{bet.latest.guessHearts}</span>
-        <Label>Deaths</Label>
-        <span>{bet.latest.guessDeaths}</span>
-        <Label>Time</Label>
-        <span>{formatTime(bet.latest.guessTime)}</span>
-      </CardContent>
-    </Card>
+    <McPanel>
+      <div className="mb-4 flex items-center justify-between border-b-2 border-black/25 pb-1">
+        <McHeading className="border-b-0 pb-0">Your Prediction</McHeading>
+        <span className="font-minecraft text-md text-[#fcfcfc] ">
+          {bet.count}/3
+        </span>
+      </div>
+
+      <div className="mb-4 flex flex-col">
+        <McStat label="Deaths" value={String(bet.latest.guessDeaths)} />
+        <McStat label="Hearts" value={formatHearts(bet.latest.guessHearts)} />
+        <McStat label="Time" value={formatTime(bet.latest.guessTime)} />
+      </div>
+
+      <div className="flex gap-2">
+        <McButton
+          disabled={!canEdit}
+          onClick={() => setEditing(true)}
+          className="flex-1"
+        >
+          Edit
+        </McButton>
+        <McButton onClick={handleClear} className="flex-1" variant="danger">
+          Clear
+        </McButton>
+      </div>
+    </McPanel>
   );
 }

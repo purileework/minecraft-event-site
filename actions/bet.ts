@@ -46,7 +46,7 @@ export async function submitBet(
     const raw = Object.fromEntries(formData)
     const parsed = BetFormSchema.safeParse({
         guessDeaths: parseInt(raw.guessDeaths as string),
-        guessHearts: parseInt(raw.guessHearts as string),
+        guessHearts: Number(raw.guessHearts as string),
         hours: parseInt(raw.hours as string),
         minutes: parseInt(raw.minutes as string),
         seconds: parseInt(raw.seconds as string),

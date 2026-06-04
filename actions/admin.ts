@@ -35,6 +35,11 @@ export async function endRun(): Promise<Result> {
         return { success: false, error: "Run not initiated." }
     }
 
+    if (runs[0].startedAt == null) {
+        console.error("Run hasn't started.")
+        return { success: false, error: "Run hasn't started." }
+    }
+
     if (runs[0].finishedAt !== null) {
         console.error("Run already ended.")
         return { success: false, error: "Run already ended." }
@@ -42,6 +47,25 @@ export async function endRun(): Promise<Result> {
 
     await db.update(run)
         .set({ finishedAt: new Date() })
+        .where(eq(run.id, 1))
+
+    revalidatePath("/admin")
+    return { success: true }
+}
+
+export async function setHeartCount(value: number): Promise<Result> {
+    if (!Number.isInteger(value) || value < 0) {
+        return { success: false, error: "Hearts must be a non-negative integer." }
+    }
+
+    const runs = await db.select().from(run).limit(1)
+    if (runs[0] == null) {
+        console.error("Run not initiated.")
+        return { success: false, error: "Run not initiated." }
+    }
+
+    await db.update(run)
+        .set({ heartCount: value })
         .where(eq(run.id, 1))
 
     revalidatePath("/admin")

@@ -19,10 +19,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <main
-      className="flex min-h-dvh flex-col flex-1 items-center justify-center
-    bg-zinc-50 font-sans dark:bg-black"
-    >
+    <main className="flex min-h-dvh flex-1 flex-col items-center justify-center p-4">
       <AdminPanel run={run} />
     </main>
   );

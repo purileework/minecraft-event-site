@@ -2,9 +2,14 @@
 
 import { login, type LoginState } from "@/actions/login";
 import { useActionState } from "react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Field, FieldError, FieldLabel } from "../ui/field";
+import {
+  McPanel,
+  McHeading,
+  McLabel,
+  McInput,
+  McButton,
+  mcErrorClass,
+} from "@/components/ui/mc";
 
 const initialState: LoginState = {};
 
@@ -14,13 +19,18 @@ export default function LoginForm() {
     initialState,
   );
   return (
-    <form action={action}>
-      <Field>
-        <FieldLabel>Enter Password</FieldLabel>
-        <Input type="password" name="password" required />
-        <FieldError>{state?.error}</FieldError>
-      </Field>
-      <Button disabled={isPending}>{isPending ? "loading..." : "Enter"}</Button>
-    </form>
+    <McPanel>
+      <McHeading className="mb-4 text-center">Admin Login</McHeading>
+      <form action={action} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <McLabel>Enter Password</McLabel>
+          <McInput type="password" name="password" required />
+          <span className={mcErrorClass}>{state?.error}</span>
+        </div>
+        <McButton disabled={isPending} className="w-full">
+          {isPending ? "Loading..." : "Enter"}
+        </McButton>
+      </form>
+    </McPanel>
   );
 }

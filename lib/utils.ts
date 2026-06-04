@@ -20,6 +20,11 @@ export function formatTime(totalSeconds: number) {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
+// Hearts are stored as half-heart units (0-20); display as 0-10 (e.g. 17 -> "8.5").
+export function formatHearts(halfHearts: number): string {
+  return (halfHearts / 2).toString();
+}
+
 export function formatDateTime(date: Date) {
   const month = date.toLocaleString("en-US", { month: "short" });
   const pad = (n: number) => n.toString().padStart(2, "0");

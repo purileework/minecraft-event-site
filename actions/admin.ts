@@ -8,48 +8,55 @@ type Result =
     | { success: true }
     | { success: false; error: string }
 
+function revalidate() {
+    revalidatePath("/admin")
+    revalidatePath("/")
+}
+
+async function loadRun() {
+    return (await db.select().from(run).limit(1))[0] ?? null
+}
+
 export async function startRun(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
-
-    if (runs[0].startedAt !== null) {
-        console.error("Run already started.")
+    if (currentRun.startedAt !== null) {
         return { success: false, error: "Run already started." }
     }
 
-    await db.update(run)
-        .set({ startedAt: new Date() })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run).set({ startedAt: new Date() }).where(eq(run.id, 1))
+    } catch (e) {
+        console.error("startRun failed:", e)
+        return { success: false, error: "Failed to start run." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
 export async function endRun(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
-
-    if (runs[0].startedAt == null) {
-        console.error("Run hasn't started.")
+    if (currentRun.startedAt === null) {
         return { success: false, error: "Run hasn't started." }
     }
-
-    if (runs[0].finishedAt !== null) {
-        console.error("Run already ended.")
+    if (currentRun.finishedAt !== null) {
         return { success: false, error: "Run already ended." }
     }
 
-    await db.update(run)
-        .set({ finishedAt: new Date() })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run).set({ finishedAt: new Date() }).where(eq(run.id, 1))
+    } catch (e) {
+        console.error("endRun failed:", e)
+        return { success: false, error: "Failed to end run." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
@@ -58,149 +65,160 @@ export async function setHeartCount(value: number): Promise<Result> {
         return { success: false, error: "Hearts must be a non-negative integer." }
     }
 
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
 
-    await db.update(run)
-        .set({ heartCount: value })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run).set({ heartCount: value }).where(eq(run.id, 1))
+    } catch (e) {
+        console.error("setHeartCount failed:", e)
+        return { success: false, error: "Failed to set heart count." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
 export async function resetRun(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
 
-    await db.update(run)
-        .set({
-            startedAt: null,
-            finishedAt: null,
-            netherEnterTime: null,
-            pausedAt: null,
-            totalPausedSeconds: 0,
-            deathCount: 0,
-            heartCount: null,
-        })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run)
+            .set({
+                startedAt: null,
+                finishedAt: null,
+                netherEnterTime: null,
+                pausedAt: null,
+                totalPausedSeconds: 0,
+                deathCount: 0,
+                heartCount: null,
+            })
+            .where(eq(run.id, 1))
+    } catch (e) {
+        console.error("resetRun failed:", e)
+        return { success: false, error: "Failed to reset run." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
 export async function pauseRun(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
-
-    if (runs[0].startedAt === null) {
-        console.error("Run not started.")
+    if (currentRun.startedAt === null) {
         return { success: false, error: "Run not started." }
     }
-
-    if (runs[0].finishedAt !== null) {
-        console.error("Run already ended.")
+    if (currentRun.finishedAt !== null) {
         return { success: false, error: "Run already ended." }
     }
-
-    if (runs[0].pausedAt !== null) {
-        console.error("Run already paused.")
+    if (currentRun.pausedAt !== null) {
         return { success: false, error: "Run already paused." }
     }
 
-    await db.update(run)
-        .set({ pausedAt: new Date() })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run).set({ pausedAt: new Date() }).where(eq(run.id, 1))
+    } catch (e) {
+        console.error("pauseRun failed:", e)
+        return { success: false, error: "Failed to pause run." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
 export async function resumeRun(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
-
-    if (runs[0].pausedAt === null) {
-        console.error("Run not paused.")
+    if (currentRun.pausedAt === null) {
         return { success: false, error: "Run not paused." }
     }
 
     const pausedSeconds = Math.floor(
-        (Date.now() - runs[0].pausedAt.getTime()) / 1000
+        (Date.now() - currentRun.pausedAt.getTime()) / 1000
     )
 
-    await db.update(run)
-        .set({
-            pausedAt: null,
-            totalPausedSeconds: sql`${run.totalPausedSeconds} + ${pausedSeconds}`,
-        })
-        .where(eq(run.id, 1))
+    try {
+        await db.update(run)
+            .set({
+                pausedAt: null,
+                totalPausedSeconds: sql`${run.totalPausedSeconds} + ${pausedSeconds}`,
+            })
+            .where(eq(run.id, 1))
+    } catch (e) {
+        console.error("resumeRun failed:", e)
+        return { success: false, error: "Failed to resume run." }
+    }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
 
 export async function toggleNether(): Promise<Result> {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
+    const currentRun = await loadRun()
+    if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
     }
 
-    if (runs[0].netherEnterTime !== null) {
+    try {
+        const newValue = currentRun.netherEnterTime === null ? new Date() : null
+        await db.update(run).set({ netherEnterTime: newValue }).where(eq(run.id, 1))
+    } catch (e) {
+        console.error("toggleNether failed:", e)
+        return { success: false, error: "Failed to toggle Nether state." }
+    }
+
+    revalidate()
+    return { success: true }
+}
+
+export async function addDeath(): Promise<Result> {
+    const currentRun = await loadRun()
+    if (currentRun === null) {
+        return { success: false, error: "Run not initiated." }
+    }
+
+    try {
         await db.update(run)
-            .set({ netherEnterTime: null })
+            .set({ deathCount: sql`${run.deathCount} + 1` })
             .where(eq(run.id, 1))
+    } catch (e) {
+        console.error("addDeath failed:", e)
+        return { success: false, error: "Failed to add death." }
+    }
 
-    } else {
+    revalidate()
+    return { success: true }
+}
+
+export async function decreaseDeath(): Promise<Result> {
+    const currentRun = await loadRun()
+    if (currentRun === null) {
+        return { success: false, error: "Run not initiated." }
+    }
+
+    if (currentRun.deathCount === 0) {
+        return { success: false, error: "Death count is already 0." }
+    }
+
+    try {
         await db.update(run)
-            .set({ netherEnterTime: new Date() })
-            .where(eq(run.id, 1))
+            .set({ deathCount: sql`${run.deathCount} - 1` })
+            .where(sql`${run.id} = 1 AND ${run.deathCount} > 0`)
+    } catch (e) {
+        console.error("decreaseDeath failed:", e)
+        return { success: false, error: "Failed to decrease death." }
     }
 
-    revalidatePath("/admin")
+    revalidate()
     return { success: true }
 }
-
-export async function addDeath() {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
-        return { success: false, error: "Run not initiated." }
-    }
-
-    await db.update(run)
-        .set({ deathCount: sql`${run.deathCount} + 1` })
-        .where(eq(run.id, 1))
-
-    revalidatePath("/admin")
-    return { success: true }
-}
-
-export async function decreaseDeath() {
-    const runs = await db.select().from(run).limit(1)
-    if (runs[0] == null) {
-        console.error("Run not initiated.")
-        return { success: false, error: "Run not initiated." }
-    }
-
-    await db.update(run)
-        .set({ deathCount: sql`${run.deathCount} - 1` })
-        .where(eq(run.id, 1))
-
-    revalidatePath("/admin")
-    return { success: true }
-}
-

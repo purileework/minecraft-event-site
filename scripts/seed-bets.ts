@@ -18,9 +18,10 @@ async function main() {
     Math.floor(Math.random() * (max - min + 1)) + min;
 
   const rows = NAMES.map((username) => ({
+    twitchUserId: `seed-${username}`,
     username,
     guessDeaths: rand(0, 12),
-    guessHearts: rand(0, 10),
+    guessHearts: rand(0, 20), // half-heart units (0-10 displayed)
     guessTime: rand(600, 3600), // 10–60 min in seconds
   }));
 

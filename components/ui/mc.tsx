@@ -1,11 +1,8 @@
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 
-// Minecraft GUI styling primitives. Stone-gray beveled panels, pixel buttons,
-// sunken dark inputs. Shared across the app for a consistent MC look.
-
-export const mcPanelClass = `font-minecraft bg-[#58585a] p-4 outline outline-[3px] outline-black 
-  border-b-[6px] border-b-[#313233] shadow-[inset_0_0_0_3px_#79797b]`;
+export const mcPanelClass = `font-minecraft text-slate bg-[#6B6B6E] p-4 outline outline-[3px] outline-black 
+  border-b-[8px] border-b-[#313233] shadow-[inset_0_0_0_3px_#9C9EA1]`;
 
 export function McPanel({ className, ...props }: ComponentProps<"div">) {
   return <div className={cn(mcPanelClass, className)} {...props} />;
@@ -67,11 +64,24 @@ export const mcErrorClass =
   "font-minecraft text-xs text-[#ff5555] [text-shadow:1px_1px_0_#3f0000]";
 
 // STATUS-menu style row: muted label left, prominent value right, hairline divider.
-export function McStat({ label, value }: { label: string; value: string }) {
+export function McStat({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="flex items-center justify-between border-b border-black/15 py-1">
       <span className="font-minecraft">{label}</span>
-      <span className="font-minecraft text-[#fcfcfc] tabular-nums">
+      <span
+        className={cn(
+          "font-minecraft text-[#fcfcfc] tabular-nums",
+          valueClassName,
+        )}
+      >
         {value}
       </span>
     </div>

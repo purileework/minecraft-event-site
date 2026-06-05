@@ -1,12 +1,13 @@
 import { db } from "@/db"
-import { bets, type Run, run } from "@/db/schema"
-import { count, desc } from "drizzle-orm"
+import { bets, users, type Run, run } from "@/db/schema"
+import { count, desc, eq } from "drizzle-orm"
 import { calculateScore, type RunResults } from "@/lib/scoring"
 import { getRunTimeSeconds } from "@/lib/time"
 
 
 export type LeaderboardRow = {
     username: string
+    color: string | null
     guessDeaths: number
     guessHearts: number
     guessTime: number
@@ -17,12 +18,14 @@ export async function getLeaderboardBets(): Promise<LeaderboardRow[]> {
     const latest = await db
         .selectDistinctOn([bets.username], {
             username: bets.username,
+            color: users.color,
             guessDeaths: bets.guessDeaths,
             guessHearts: bets.guessHearts,
             guessTime: bets.guessTime,
             submittedAt: bets.submittedAt,
         })
         .from(bets)
+        .leftJoin(users, eq(users.twitchUserId, bets.twitchUserId))
         .orderBy(bets.username, desc(bets.submittedAt))
 
     const counts = await db
@@ -35,6 +38,7 @@ export async function getLeaderboardBets(): Promise<LeaderboardRow[]> {
     return latest
         .map((row) => ({
             username: row.username,
+            color: row.color,
             guessDeaths: row.guessDeaths,
             guessHearts: row.guessHearts,
             guessTime: row.guessTime,
@@ -53,6 +57,7 @@ export type ScoredLeaderboardRow = {
     rank: number
 
     username: string
+    color: string | null
     guessDeaths: number
     guessHearts: number
     guessTime: number
@@ -83,11 +88,17 @@ export async function getScoredLeaderboard(): Promise<ScoredLeaderboardRow[]> {
         .from(bets)
         .orderBy(bets.username, desc(bets.submittedAt))
 
+    const colorRows = await db
+        .select({ twitchUserId: users.twitchUserId, color: users.color })
+        .from(users)
+    const colorMap = new Map(colorRows.map((r) => [r.twitchUserId, r.color]))
+
     return latest
         .map((bet) => {
             const score = calculateScore(bet, results)
             return {
                 username: bet.username,
+                color: colorMap.get(bet.twitchUserId) ?? null,
                 guessDeaths: bet.guessDeaths,
                 guessHearts: bet.guessHearts,
                 guessTime: bet.guessTime,

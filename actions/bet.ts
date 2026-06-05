@@ -6,6 +6,9 @@ import { BetFormSchema, BetFormSchemaType } from "@/lib/schema";
 import { count, desc, eq } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { z } from "zod"
+import { auth } from "@/auth";
+
+const MAX_BETS = 3;
 
 export type FieldErrors = Partial<Record<keyof BetFormSchemaType, string[]>>;
 
@@ -28,19 +31,28 @@ export async function submitBet(
     _prevState: FormState,
     formData: FormData,
 ): Promise<FormState> {
+    const session = await auth()
+    const twitchUserId = session?.user?.id
+    if (!twitchUserId) {
+        return { success: false, error: "Sign in with Twitch to place a bet." }
+    }
+
     const runs = await db.select().from(run).limit(1)
     const currentRun = runs[0]
 
     if (!currentRun) {
         return { success: false, error: "Run not initialized" }
     }
-    const betsClosed = currentRun.netherEnterTime !== null
+    if (currentRun.netherEnterTime !== null) {
+        return { success: false, error: "Bets are closed c:<" }
+    }
 
-    if (betsClosed) {
-        return {
-            success: false,
-            error: "Bets are closed c:<"
-        }
+    const [{ value: used }] = await db
+        .select({ value: count() })
+        .from(bets)
+        .where(eq(bets.twitchUserId, twitchUserId))
+    if (used >= MAX_BETS) {
+        return { success: false, error: "You've used all your bets c:<" }
     }
 
     const raw = Object.fromEntries(formData)
@@ -62,11 +74,11 @@ export async function submitBet(
 
     const { hours, minutes, seconds, ...rest } = parsed.data
     const newBet: NewBet = {
-        username: "temp-player",
+        twitchUserId,
+        username: session.user.name ?? "anon",
         ...rest,
         guessTime: hours * 3600 + minutes * 60 + seconds,
     }
-
 
     try {
         await db.insert(bets).values(newBet)
@@ -84,35 +96,38 @@ export type ViewerBet = {
 }
 
 export async function getViewerBet(): Promise<ViewerBet> {
-    const session = { username: "temp-player" };
+    const session = await auth()
+    const twitchUserId = session?.user?.id
+    if (!twitchUserId) {
+        return { latest: null as unknown as Bet, count: 0 }
+    }
 
     const [latest] = await db.select().from(bets)
-        .where(eq(bets.username, session.username))
+        .where(eq(bets.twitchUserId, twitchUserId))
         .orderBy(desc(bets.submittedAt)).limit(1);
 
     const [{ value }] = await db.select({ value: count() }).from(bets)
-        .where(eq(bets.username, session.username));
+        .where(eq(bets.twitchUserId, twitchUserId));
 
     return { latest: latest ?? null, count: value };
-
 }
 
 type Result =
     | { success: true }
     | { success: false; error: string }
 
-
 export async function resetBets(): Promise<Result> {
-    const session = { username: "temp-player" }
-    if (!session?.username) {
-        return { success: false, error: "You must be logged in" }
+    const session = await auth()
+    const twitchUserId = session?.user?.id
+    if (!twitchUserId) {
+        return { success: false, error: "You must be signed in." }
     }
     try {
-        await db.delete(bets).where(eq(bets.username, session.username))
+        await db.delete(bets).where(eq(bets.twitchUserId, twitchUserId))
         refresh()
-        return { "success": true }
+        return { success: true }
     } catch (error) {
-        console.error(`resetBets failed for ${session.username}:`, error)
+        console.error(`resetBets failed for ${twitchUserId}:`, error)
         return {
             success: false,
             error: `Failed to delete your bets. Please try again.`

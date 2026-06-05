@@ -107,7 +107,7 @@ export default function AdminPanel({ run }: AdminPanelProps) {
           <McLabel className="text-xs">
             Elapsed {isPaused && "(paused)"}
           </McLabel>
-          <div className="bg-black px-3 py-2 text-center outline outline-2 outline-[#a0a0a0] shadow-[inset_2px_2px_0_0_#000]">
+          <div className="bg-black px-3 py-2 text-center shadow-[inset_2px_2px_0_0_#000] outline-2 outline-[#a0a0a0]">
             <span className="font-minecraft text-3xl text-[#5fdc5f] tabular-nums [text-shadow:2px_2px_0_#000]">
               {formatTime(elapsedSeconds)}
             </span>
@@ -175,7 +175,7 @@ export default function AdminPanel({ run }: AdminPanelProps) {
       {/* Deaths + Hearts */}
       <McPanel className="flex flex-col gap-3 p-4">
         <McHeading>Deaths</McHeading>
-        <div className="flex items-center justify-between bg-black px-4 py-2 outline outline-2 outline-[#a0a0a0] shadow-[inset_2px_2px_0_0_#000]">
+        <div className="flex items-center justify-between bg-black px-4 py-2 shadow-[inset_2px_2px_0_0_#000] outline outline-2 outline-[#a0a0a0]">
           <span className="font-minecraft text-4xl text-white tabular-nums [text-shadow:2px_2px_0_#000]">
             {optimisticDeaths}
           </span>

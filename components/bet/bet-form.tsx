@@ -37,9 +37,14 @@ function FieldRow({
 type BetFormProps = {
   initial?: Partial<BetFormSchemaType>;
   onSuccessAction?: () => void;
+  onCancel?: () => void;
 };
 
-export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
+export default function BetForm({
+  initial,
+  onSuccessAction,
+  onCancel,
+}: BetFormProps) {
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     submitBet,
     initialState,
@@ -100,9 +105,20 @@ export default function BetForm({ initial, onSuccessAction }: BetFormProps) {
           </div>
         </FieldRow>
 
-        <McButton type="submit" disabled={isPending} className="mt-4 w-full">
+        <McButton type="submit" disabled={isPending} className="my-4 w-full">
           {isPending ? "Saving..." : "Make Prediction c:"}
         </McButton>
+
+        {onCancel && (
+          <McButton
+            disabled={isPending}
+            variant="danger"
+            onClick={() => onCancel()}
+            className="w-full"
+          >
+            Cancel
+          </McButton>
+        )}
       </form>
     </McPanel>
   );

@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780595875140,
+      "tag": "0000_add_twitch_user_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780605826655,
+      "tag": "0001_youthful_talkback",
+      "breakpoints": true
+    }
+  ]
+}

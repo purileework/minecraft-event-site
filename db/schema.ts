@@ -2,11 +2,23 @@ import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const bets = pgTable("bets", {
     id: serial("id").primaryKey(),
+    // Stable Twitch identity — used for the 3-bet cap and "your bet" lookup.
+    twitchUserId: text("twitch_user_id").notNull(),
+    // Twitch display name at submit time (can change, so not the identity key).
     username: text("username").notNull(),
     guessDeaths: integer("guess_deaths").notNull(),
     guessTime: integer("guess_time").notNull(),
     guessHearts: integer("guess_hearts").notNull(),
     submittedAt: timestamp("submitted_at").notNull().defaultNow()
+});
+
+export const users = pgTable("users", {
+    // Stable Twitch identity.
+    twitchUserId: text("twitch_user_id").primaryKey(),
+    username: text("username").notNull(),
+    // Twitch chat color hex (e.g. "#FF0000"), null if unset.
+    color: text("color"),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const run = pgTable("run", {
@@ -25,5 +37,8 @@ export type NewBet = typeof bets.$inferInsert
 
 export type Run = typeof run.$inferSelect
 export type NewRun = typeof run.$inferInsert
+
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
 
 

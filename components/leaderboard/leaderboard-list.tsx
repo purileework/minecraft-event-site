@@ -2,20 +2,13 @@ import type { ScoredLeaderboardRow } from "@/lib/queries/leaderboard";
 import { cn, formatHearts, formatTime } from "@/lib/utils";
 
 const panelSurface =
-  "bg-[#58585a] outline outline-[3px] outline-black border-b-[6px] border-b-[#313233] shadow-[inset_0_0_0_3px_#79797b]";
+  "bg-[#6B6B6E] outline outline-[3px] outline-black border-b-[6px] border-b-[#313233] shadow-[inset_0_0_0_3px_#9C9EA1]";
 
-// Top 3 rows get a purple tint of decreasing intensity.
-const ROW_STYLES: Record<number, string> = {
-  1: "bg-[#280050]",
-  2: "bg-[#280050]/60",
-  3: "bg-[#280050]/30",
-};
-
-// Top 3 rank numbers: gold, silver, bronze.
-const RANK_STYLES: Record<number, string> = {
-  1: "text-[#ffd700]",
-  2: "text-[#c0c0c0]",
-  3: "text-[#cd7f32]",
+// Top 3 rank circles: gold, silver, bronze.
+const RANK_BG: Record<number, string> = {
+  1: "bg-[#ffd700]/60",
+  2: "bg-[#c0c0c0]/60",
+  3: "bg-[#cd7f32]/60",
 };
 
 function Cell({
@@ -43,41 +36,15 @@ function Cell({
 
 function HeaderBlock() {
   return (
-    <div className="sticky top-0 z-20 border-b border-black/40 bg-[#58585a]">
-      <div className="flex h-9 items-center gap-3 px-3 text-xs tracking-wide text-[#fcfcfc] uppercase [text-shadow:2px_2px_0_#3e3e3e]">
-        <span className="h-3 w-3 shrink-0" />
-        <span className="w-6 shrink-0 text-right">#</span>
-        <span className="min-w-0 flex-1">username</span>
-        <span className="hidden w-28 shrink-0 text-center sm:block">
-          Deaths
-        </span>
-        <span className="hidden w-28 shrink-0 text-center sm:block">
-          Hearts
-        </span>
-        <span className="hidden w-32 shrink-0 text-center sm:block">Time</span>
-        <span className="w-14 shrink-0 text-right">Total</span>
-      </div>
-      <div className="hidden h-5 items-center gap-3 px-3 text-[10px] text-white/50 sm:flex">
-        <span className="h-3 w-3 shrink-0" />
-        <span className="w-6 shrink-0" />
-        <span className="min-w-0 flex-1" />
-        <span className="grid w-28 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-1">
-          <span className="text-right">guess</span>
-          <span>|</span>
-          <span className="text-left">score</span>
-        </span>
-        <span className="grid w-28 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-1">
-          <span className="text-right">guess</span>
-          <span>|</span>
-          <span className="text-left">score</span>
-        </span>
-        <span className="grid w-32 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-1">
-          <span className="text-right">guess</span>
-          <span>|</span>
-          <span className="text-left">score</span>
-        </span>
-        <span className="w-14 shrink-0" />
-      </div>
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/40 bg-[#6B6B6E] p-4 pb-1 text-sm tracking-wide text-[#fcfcfc] uppercase shadow-[inset_3px_0_0_0_#9C9EA1,inset_-3px_0_0_0_#9C9EA1,inset_0_3px_0_0_#9C9EA1] [text-shadow:2px_2px_0_#3e3e3e]">
+      <span className="w-6 shrink-0 text-center">#</span>
+      <span className="min-w-0 flex-1">username</span>
+      <span className="hidden w-28 shrink-0 text-center sm:block">Deaths</span>
+      <span className="hidden w-28 shrink-0 text-center sm:block">Hearts</span>
+      <span className="hidden w-32 shrink-0 text-center sm:block">Time</span>
+      <span className="w-26 shrink-0 text-right whitespace-nowrap">
+        Total Score
+      </span>
     </div>
   );
 }
@@ -94,23 +61,28 @@ function LeaderboardRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 px-3 py-2 text-sm leading-tight text-[#fcfcfc]",
-        ROW_STYLES[row.rank],
-        pinned && "sticky top-0 z-10 border-b border-black/40 bg-[#58585a]",
+        "flex items-center gap-3 px-4 py-2 text-sm leading-tight text-[#fcfcfc]",
+        pinned &&
+          "sticky top-0 z-10 border-b border-black/40 bg-[#6B6B6E] shadow-[inset_3px_0_0_0_#9C9EA1,inset_-3px_0_0_0_#9C9EA1]",
         isViewer && pinned && "bg-[#48494a]",
       )}
     >
       <span
         className={cn(
-          "w-6 shrink-0 text-right tabular-nums",
-          RANK_STYLES[row.rank] ?? "text-[#b8b8b8]",
+          "shrink-0 tabular-nums",
+          row.rank <= 3
+            ? cn(
+                "flex h-6 w-6 items-center justify-center rounded-sm leading-none text-[#1f1f1f]",
+                RANK_BG[row.rank],
+              )
+            : "w-6 text-center text-[#b8b8b8]",
         )}
       >
-        {row.rank}
+        <span className="translate-y-[2px]">{row.rank}</span>
       </span>
 
       <span className="flex min-w-0 flex-1 gap-2">
-        <span>{row.username}</span>
+        <span style={{ color: row.color ?? undefined }}>{row.username}</span>
       </span>
 
       <Cell
@@ -129,7 +101,7 @@ function LeaderboardRow({
         width="w-32"
       />
 
-      <span className="text-teal w-14 shrink-0 text-right text-lg tabular-nums">
+      <span className="text-teal w-26 shrink-0 text-right text-lg tabular-nums">
         {row.totalScore}
       </span>
     </div>
@@ -159,7 +131,7 @@ export default function LeaderboardList({
   return (
     <div
       className={cn(
-        "font-minecraft flex min-h-0 flex-1 flex-col overflow-hidden",
+        "font-minecraft flex min-h-[250px] flex-col overflow-hidden",
         panelSurface,
       )}
     >

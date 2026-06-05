@@ -1,12 +1,15 @@
 import { getViewerBet } from "@/actions/bet";
 import BetForm from "@/components/bet/bet-form";
-import BetView from "@/components/bet/bet-view";
+import BetCard from "@/components/bet/bet-card";
 import Leaderboard from "@/components/leaderboard/leaderboard";
 import ScoredLeaderboard from "@/components/leaderboard/scored-leaderboard";
 import ResultsHeader from "@/components/leaderboard/results-header";
 import { McHeading, McLabel, McPanel } from "@/components/ui/mc";
 import { McTooltip } from "@/components/ui/mc-tooltip";
+import { SignInButton, SignOutButton } from "@/components/auth/auth-buttons";
+import ColorSync from "@/components/auth/color-sync";
 import { getRun } from "@/lib/queries/leaderboard";
+import { auth } from "@/auth";
 
 function VideoBackground({ id }: { id: string }) {
   const src =
@@ -29,6 +32,9 @@ function VideoBackground({ id }: { id: string }) {
 export default async function Home() {
   const run = await getRun();
   const runEnded = run.finishedAt !== null;
+  const enteredNether = run.netherEnterTime !== null;
+  const session = await auth();
+  const isAuthed = !!session?.user?.id;
   const viewerBet = await getViewerBet();
 
   return (
@@ -36,7 +42,7 @@ export default async function Home() {
       <VideoBackground id="DPXs4YlNl7k" />
 
       {/* Left: Result and prediction */}
-      <div className="flex w-full max-w-[800px] flex-col gap-4 overflow-y-auto p-6 lg:w-[420px] lg:shrink-0">
+      <div className="flex w-full max-w-[800px] flex-col gap-4 overflow-y-auto p-6 lg:w-[420px] lg:shrink-0 lg:pr-1">
         <div className="font-minecraft text-teal text-lg uppercase [text-shadow:2px_2px_0_#000]">
           Make a Prediction c:
         </div>
@@ -108,11 +114,39 @@ export default async function Home() {
           </McPanel>
         )}
 
-        {viewerBet.count === 0 ? <BetForm /> : <BetView />}
+        {isAuthed ? (
+          <>
+            <ColorSync />
+            <McPanel className="flex items-center justify-between p-4">
+              <span className="font-minecraft text-[#fcfcfc] [text-shadow:2px_2px_0_#3e3e3e]">
+                Hello, {session.user.name ?? "viewer"}
+              </span>
+              <SignOutButton />
+            </McPanel>
+
+            {!runEnded &&
+              (viewerBet.count === 0 ? (
+                !enteredNether && <BetForm />
+              ) : (
+                <BetCard
+                  bet={viewerBet}
+                  readOnly={enteredNether}
+                  deathCount={run.deathCount}
+                />
+              ))}
+          </>
+        ) : (
+          <McPanel className="flex flex-col gap-3 p-4">
+            <span className="font-minecraft text-[#fcfcfc] [text-shadow:2px_2px_0_#3e3e3e]">
+              Sign in to place your prediction.
+            </span>
+            <SignInButton />
+          </McPanel>
+        )}
       </div>
 
       {/* Right: leaderboard table */}
-      <div className="flex min-h-0 w-full flex-col gap-4 p-6 lg:w-[800px]">
+      <div className="flex min-h-0 w-full flex-col gap-4 p-6 lg:w-[800px] lg:pl-0">
         <div className="font-minecraft text-teal text-lg uppercase [text-shadow:2px_2px_0_#000]">
           Predictions
         </div>

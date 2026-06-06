@@ -1,12 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Infinity as InfinityIcon } from "lucide-react";
-import {
-  getLeaderboardBets,
-  getRun,
-  type LeaderboardRow,
-} from "@/lib/queries/leaderboard";
+import type { LeaderboardRow } from "@/lib/queries/leaderboard";
+import type { LeaderboardSnapshot } from "@/app/api/leaderboard/route";
 import { cn, formatHearts, formatTime } from "@/lib/utils";
 
 const MAX_BETS = 3;
+const POLL_MS = 3000;
 
 function Row({ row, deathCount }: { row: LeaderboardRow; deathCount: number }) {
   return (
@@ -45,11 +46,40 @@ function Row({ row, deathCount }: { row: LeaderboardRow; deathCount: number }) {
   );
 }
 
-export default async function Leaderboard() {
-  const rows = await getLeaderboardBets();
-  const currentRun = await getRun();
+export default function LiveLeaderboard({
+  initialRows,
+  initialDeathCount,
+  initialNetherClosed,
+}: {
+  initialRows: LeaderboardRow[];
+  initialDeathCount: number;
+  initialNetherClosed: boolean;
+}) {
+  const [rows, setRows] = useState(initialRows);
+  const [deathCount, setDeathCount] = useState(initialDeathCount);
+  const [netherClosed, setNetherClosed] = useState(initialNetherClosed);
 
-  if (currentRun.netherEnterTime !== null) {
+  useEffect(() => {
+    // Poll the snapshot endpoint. On any network/parse error, keep the last
+    // good data instead of crashing or flashing empty.
+    async function poll() {
+      try {
+        const res = await fetch("/api/leaderboard", { cache: "no-store" });
+        if (!res.ok) return;
+        const data: LeaderboardSnapshot = await res.json();
+        setRows(data.rows);
+        setDeathCount(data.deathCount);
+        setNetherClosed(data.netherClosed);
+      } catch {
+        // ignore — last good state stays on screen
+      }
+    }
+
+    const id = setInterval(poll, POLL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  if (netherClosed) {
     return (
       <div className="font-minecraft text-teal [text-shadow:2px_2px_0_#000]">
         Poppang has entered the nether. Bets are closed. Let&apos;s see who wins
@@ -77,11 +107,7 @@ export default async function Leaderboard() {
         ) : (
           <div className="divide-y divide-white/10">
             {rows.map((row) => (
-              <Row
-                key={row.username}
-                row={row}
-                deathCount={currentRun.deathCount}
-              />
+              <Row key={row.username} row={row} deathCount={deathCount} />
             ))}
           </div>
         )}

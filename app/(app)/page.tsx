@@ -1,14 +1,14 @@
 import { getViewerBet } from "@/actions/bet";
 import BetForm from "@/components/bet/bet-form";
 import BetCard from "@/components/bet/bet-card";
-import Leaderboard from "@/components/leaderboard/leaderboard";
+import LiveLeaderboard from "@/components/leaderboard/live-leaderboard";
 import ScoredLeaderboard from "@/components/leaderboard/scored-leaderboard";
 import ResultsHeader from "@/components/leaderboard/results-header";
 import { McHeading, McLabel, McPanel } from "@/components/ui/mc";
 import { McTooltip } from "@/components/ui/mc-tooltip";
 import { SignInButton, SignOutButton } from "@/components/auth/auth-buttons";
 import ColorSync from "@/components/auth/color-sync";
-import { getRun } from "@/lib/queries/leaderboard";
+import { getLeaderboardBets, getRun } from "@/lib/queries/leaderboard";
 import { auth } from "@/auth";
 
 function VideoBackground({ id }: { id: string }) {
@@ -36,6 +36,9 @@ export default async function Home() {
   const session = await auth();
   const isAuthed = !!session?.user?.id;
   const viewerBet = await getViewerBet();
+  // SSR the initial leaderboard so first paint has real content; the client
+  // component then polls /api/leaderboard for live updates.
+  const leaderboardRows = runEnded ? [] : await getLeaderboardBets();
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden font-sans lg:flex-row lg:justify-center lg:gap-4">
@@ -150,7 +153,15 @@ export default async function Home() {
         <div className="font-minecraft text-teal text-lg uppercase [text-shadow:2px_2px_0_#000]">
           Predictions
         </div>
-        {runEnded ? <ScoredLeaderboard /> : <Leaderboard />}
+        {runEnded ? (
+          <ScoredLeaderboard />
+        ) : (
+          <LiveLeaderboard
+            initialRows={leaderboardRows}
+            initialDeathCount={run.deathCount}
+            initialNetherClosed={enteredNether}
+          />
+        )}
       </div>
     </main>
   );

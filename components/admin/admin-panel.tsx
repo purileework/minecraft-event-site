@@ -134,52 +134,18 @@ export default function AdminPanel({ run }: AdminPanelProps) {
         <Divider />
 
         <FieldRow label="End Time" value={endTime ?? "—"} />
-        <div className="flex gap-2">
-          <McButton
-            className="flex-1"
-            onClick={() => endRun("finished")}
-            disabled={isFinished}
-          >
-            End Run (success)
+        <div className="grid gap-4">
+          <McButton onClick={() => endRun("finished")} disabled={isFinished}>
+            End Run
           </McButton>
           <McButton
-            className="flex-1"
             variant="danger"
             onClick={() => endRun("failed")}
             disabled={isFinished}
           >
-            Failed Run (died)
+            Failed Run
           </McButton>
         </div>
-      </McPanel>
-
-      {/* Nether */}
-      <McPanel className="flex flex-col gap-3 p-4">
-        <McHeading>Nether</McHeading>
-        <McButton onClick={() => toggleNether()}>
-          {run.netherEnterTime ? "Exit" : "Enter"} Nether
-        </McButton>
-        <span className="font-minecraft text-xs text-[#5f5f5f]">
-          closes bets
-        </span>
-
-        <Divider />
-
-        <McLabel className="text-xs">Danger zone</McLabel>
-        <McButton
-          variant="danger"
-          onClick={() => {
-            if (
-              window.confirm(
-                "Reset the entire run? Clears start/end, nether, pauses, deaths and hearts. Cannot be undone.",
-              )
-            ) {
-              resetRun();
-            }
-          }}
-        >
-          Reset All
-        </McButton>
       </McPanel>
 
       {/* Deaths + Hearts */}
@@ -220,6 +186,32 @@ export default function AdminPanel({ run }: AdminPanelProps) {
           />
           <McButton onClick={saveHearts}>Save</McButton>
         </div>
+      </McPanel>
+
+      {/* Nether */}
+      <McPanel className="flex flex-col gap-3 p-4">
+        <McHeading>Nether</McHeading>
+        <McButton onClick={() => toggleNether()}>
+          {run.netherEnterTime ? "Exit" : "Enter"} Nether
+        </McButton>
+
+        <Divider />
+
+        <McLabel className="text-xs">Danger zone</McLabel>
+        <McButton
+          variant="danger"
+          onClick={() => {
+            if (
+              window.confirm(
+                "Reset the entire run? Clears start/end, nether, pauses, deaths and hearts. Cannot be undone.",
+              )
+            ) {
+              resetRun();
+            }
+          }}
+        >
+          Reset All
+        </McButton>
       </McPanel>
     </div>
   );

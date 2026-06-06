@@ -6,6 +6,17 @@ import { McHeading, McStat } from "@/components/ui/mc";
 export default function ResultsHeader({ run }: { run: Run }) {
   const totalTimeSeconds = getRunTimeSeconds(run);
 
+  if (run.runOutcome === "failed") {
+    return (
+      <div className="flex flex-col gap-2">
+        <McHeading>Results</McHeading>
+        <p className="font-minecraft text-[#ff5555] [text-shadow:2px_2px_0_#3f0000]">
+          💔 The dragon won this time
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <McHeading>Results</McHeading>

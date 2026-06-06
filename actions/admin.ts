@@ -1,6 +1,6 @@
 "use server"
 import { db } from "@/db"
-import { run } from "@/db/schema"
+import { run, type RunOutcome } from "@/db/schema"
 import { eq, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 
@@ -37,7 +37,7 @@ export async function startRun(): Promise<Result> {
     return { success: true }
 }
 
-export async function endRun(): Promise<Result> {
+export async function endRun(outcome: RunOutcome = "finished"): Promise<Result> {
     const currentRun = await loadRun()
     if (currentRun === null) {
         return { success: false, error: "Run not initiated." }
@@ -50,7 +50,10 @@ export async function endRun(): Promise<Result> {
     }
 
     try {
-        await db.update(run).set({ finishedAt: new Date() }).where(eq(run.id, 1))
+        await db
+            .update(run)
+            .set({ finishedAt: new Date(), runOutcome: outcome })
+            .where(eq(run.id, 1))
     } catch (e) {
         console.error("endRun failed:", e)
         return { success: false, error: "Failed to end run." }
@@ -97,6 +100,7 @@ export async function resetRun(): Promise<Result> {
                 totalPausedSeconds: 0,
                 deathCount: 0,
                 heartCount: null,
+                runOutcome: null,
             })
             .where(eq(run.id, 1))
     } catch (e) {

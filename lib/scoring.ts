@@ -1,9 +1,10 @@
-import type { Bet } from "@/db/schema"
+import type { Bet, RunOutcome } from "@/db/schema"
 
 export type RunResults = {
     deathCount: number
     heartCount: number
     totalTimeSeconds: number
+    outcome: RunOutcome
 }
 
 export type ScoreResult = {
@@ -23,11 +24,33 @@ export function scoreCategory(guess: number, real: number, maxDiff: number): num
     return Math.round(Math.max(0, 100 - (Math.abs(guess - real) / maxDiff) * 100))
 }
 
+// Hearts & time only exist if the dragon is killed, so both branch on
+// prediction-vs-outcome:
+//  - predicted matches actual: closeness for success, 100 for correct failure
+//  - mismatch: 0
+// `closeness` is only evaluated on a correctly-predicted success.
+function scoreKilledCategory(
+    bet: Bet,
+    results: RunResults,
+    closeness: () => number,
+): number {
+    const predictedFailure = bet.guessIsFailing
+    const actualFailure = results.outcome === "failed"
+
+    if (predictedFailure !== actualFailure) return 0
+    if (actualFailure) return 100
+
+    return closeness()
+}
 
 export function calculateScore(bet: Bet, results: RunResults): ScoreResult {
     const deathsScore = scoreCategory(bet.guessDeaths, results.deathCount, MAX_DIFF.deaths)
-    const heartsScore = scoreCategory(bet.guessHearts, results.heartCount, MAX_DIFF.hearts)
-    const timeScore = scoreCategory(bet.guessTime, results.totalTimeSeconds, MAX_DIFF.time)
+    const heartsScore = scoreKilledCategory(bet, results, () =>
+        scoreCategory(bet.guessHearts ?? 0, results.heartCount, MAX_DIFF.hearts),
+    )
+    const timeScore = scoreKilledCategory(bet, results, () =>
+        scoreCategory(bet.guessTime ?? 0, results.totalTimeSeconds, MAX_DIFF.time),
+    )
 
     return {
         deathsScore,

@@ -134,13 +134,23 @@ export default function AdminPanel({ run }: AdminPanelProps) {
         <Divider />
 
         <FieldRow label="End Time" value={endTime ?? "—"} />
-        <McButton
-          variant="danger"
-          onClick={() => endRun()}
-          disabled={isFinished}
-        >
-          End Run
-        </McButton>
+        <div className="flex gap-2">
+          <McButton
+            className="flex-1"
+            onClick={() => endRun("finished")}
+            disabled={isFinished}
+          >
+            End Run (success)
+          </McButton>
+          <McButton
+            className="flex-1"
+            variant="danger"
+            onClick={() => endRun("failed")}
+            disabled={isFinished}
+          >
+            Failed Run (died)
+          </McButton>
+        </div>
       </McPanel>
 
       {/* Nether */}

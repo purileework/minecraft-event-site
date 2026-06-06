@@ -62,7 +62,8 @@ export default async function Home() {
               poppang
             </span>
           </McTooltip>{" "}
-          tries to beat the ender dragon, can she do it in 24hrs?
+          is trying to beat the ender dragon, can she do it in
+          <span className="text-teal"> 12hrs?</span>
           <br />
           make a prediction on death count, hearts at moment of dragon killing,
           and how long it takes her.
@@ -102,8 +103,7 @@ export default async function Home() {
               times
             </li>
             <li>
-              3. guess making / editing closes once poppang enters the nether
-              for the first time
+              3. guess making / editing closes once poppang meets the dragon
             </li>
             <li>4. results revealed after dragon is killed or 24hrs is up</li>
           </ol>

@@ -32,12 +32,25 @@ export function McLabel({ className, ...props }: ComponentProps<"label">) {
   );
 }
 
+// minecraft.wiki-style button matching McPanel metrics: 3px black outline,
+// 3px inner bevel, 6px bottom "lip". Active flips the lip to the top so the
+// button presses down without changing height. Variants change only colors.
 const buttonBase =
-  "font-minecraft px-4 py-2 uppercase text-[#fcfcfc] outline outline-2 outline-black [text-shadow:2px_2px_0_#3f3f3f] shadow-[inset_-3px_-3px_0_0_#3f3f3f,inset_3px_3px_0_0_#fff] active:shadow-[inset_3px_3px_0_0_#3f3f3f,inset_-3px_-3px_0_0_#fff] disabled:opacity-50 disabled:active:shadow-[inset_-3px_-3px_0_0_#3f3f3f,inset_3px_3px_0_0_#fff]";
+  "font-minecraft box-border inline-flex select-none items-center justify-center gap-1.5 " +
+  "px-4 py-2 text-center font-bold uppercase whitespace-nowrap " +
+  "text-[#fcfcfc] [text-shadow:2px_2px_0_var(--btn-shadow)] " +
+  "outline outline-[3px] outline-black " +
+  "border-t-0 border-b-[6px] border-b-[var(--btn-edge)] " +
+  "[box-shadow:inset_0_0_0_3px_var(--btn-inner)] " +
+  "transition-[filter] duration-100 hover:brightness-110 " +
+  "active:border-b-0 active:border-t-[6px] active:border-t-[var(--btn-edge)] " +
+  "disabled:opacity-50 disabled:brightness-100 disabled:active:border-b-[6px] disabled:active:border-t-0";
 
 const buttonVariants = {
-  default: "bg-[#8b8b8b] hover:bg-[#6b9b4b] disabled:hover:bg-[#8b8b8b]",
-  danger: "bg-[#a13b3b] hover:bg-[#c24b4b] disabled:hover:bg-[#a13b3b]",
+  default:
+    "bg-[#3a971e] [--btn-inner:#62b32f] [--btn-edge:#265f13] [--btn-shadow:#1f5010]",
+  danger:
+    "bg-[#bf3c2c] [--btn-inner:#e0594a] [--btn-edge:#7a241a] [--btn-shadow:#5e1d14]",
 } as const;
 
 export function McButton({
@@ -54,7 +67,7 @@ export function McButton({
 }
 
 export const mcInputClass =
-  "font-minecraft w-full bg-black px-3 pt-[14px] pb-[2px] text-[#fcfcfc] outline outline-2 outline-[#a0a0a0] shadow-[inset_2px_2px_0_0_#000] placeholder:text-[#777] focus:outline-2 focus:outline-[#fcfcfc]";
+  "font-minecraft w-full bg-black px-3 pt-[14px] pb-[2px] text-[#fcfcfc] outline outline-2 outline-[#a0a0a0] shadow-[inset_2px_2px_0_0_#000] placeholder:text-[#777] focus:outline-2 focus:outline-[#fcfcfc] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
 export function McInput({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(mcInputClass, className)} {...props} />;

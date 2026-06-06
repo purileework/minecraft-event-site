@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const bets = pgTable("bets", {
     id: serial("id").primaryKey(),
@@ -7,9 +7,12 @@ export const bets = pgTable("bets", {
     // Twitch display name at submit time (can change, so not the identity key).
     username: text("username").notNull(),
     guessDeaths: integer("guess_deaths").notNull(),
-    guessTime: integer("guess_time").notNull(),
-    guessHearts: integer("guess_hearts").notNull(),
-    submittedAt: timestamp("submitted_at").notNull().defaultNow()
+    // Null when the viewer predicts failure: time & hearts only exist if the
+    // dragon is killed, so failure-predicters skip both.
+    guessTime: integer("guess_time"),
+    guessHearts: integer("guess_hearts"),
+    submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+    guessIsFailing: boolean("guess_is_failing").notNull().default(false)
 });
 
 export const users = pgTable("users", {
@@ -30,7 +33,11 @@ export const run = pgTable("run", {
     totalPausedSeconds: integer("total_paused_seconds").notNull().default(0),
     deathCount: integer("death_count").notNull().default(0),
     heartCount: integer("heart_count"),
+    // 'finished' = dragon beaten, 'failed' = run died, null = still going.
+    runOutcome: text("run_outcome", { enum: ["finished", "failed"] }),
 })
+
+export type RunOutcome = "finished" | "failed"
 
 export type Bet = typeof bets.$inferSelect
 export type NewBet = typeof bets.$inferInsert
@@ -40,5 +47,6 @@ export type NewRun = typeof run.$inferInsert
 
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
+
 
 

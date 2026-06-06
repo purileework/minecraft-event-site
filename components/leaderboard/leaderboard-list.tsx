@@ -81,8 +81,13 @@ function LeaderboardRow({
         <span className="translate-y-[2px]">{row.rank}</span>
       </span>
 
-      <span className="flex min-w-0 flex-1 gap-2">
+      <span className="flex min-w-0 flex-1 items-center gap-2">
         <span style={{ color: row.color ?? undefined }}>{row.username}</span>
+        {row.calledFailure && (
+          <span className="font-minecraft shrink-0 rounded-sm bg-[#a13b3b]/70 px-1 text-xs whitespace-nowrap text-[#fcfcfc]">
+            💀 called the failure
+          </span>
+        )}
       </span>
 
       <Cell
@@ -91,12 +96,24 @@ function LeaderboardRow({
         width="w-28"
       />
       <Cell
-        guess={formatHearts(row.guessHearts)}
+        guess={
+          row.guessIsFailing
+            ? "💀"
+            : row.guessHearts === null
+              ? "—"
+              : formatHearts(row.guessHearts)
+        }
         score={row.heartsScore}
         width="w-28"
       />
       <Cell
-        guess={formatTime(row.guessTime)}
+        guess={
+          row.guessIsFailing
+            ? "💀"
+            : row.guessTime === null
+              ? "—"
+              : formatTime(row.guessTime)
+        }
         score={row.timeScore}
         width="w-32"
       />

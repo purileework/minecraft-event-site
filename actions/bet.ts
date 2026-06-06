@@ -18,6 +18,7 @@ export type BetFormValues = {
     hours?: string
     minutes?: string
     seconds?: string
+    guessIsFailing?: string
 }
 
 export type FormState = {
@@ -52,16 +53,25 @@ export async function submitBet(
         .from(bets)
         .where(eq(bets.twitchUserId, twitchUserId))
     if (used >= MAX_BETS) {
-        return { success: false, error: "You've used all your bets c:<" }
+        return { success: false, error: "You've used all your bets o:" }
     }
 
     const raw = Object.fromEntries(formData)
+    const guessIsFailing = raw.guessIsFailing === "on" || raw.guessIsFailing === "true"
+    // Disabled (failing) inputs aren't submitted -> undefined so optional/
+    // superRefine handles them.
+    const numOrUndefined = (v: FormDataEntryValue | undefined) => {
+        if (v === undefined || v === "") return undefined
+        const n = Number(v)
+        return Number.isNaN(n) ? undefined : n
+    }
     const parsed = BetFormSchema.safeParse({
         guessDeaths: parseInt(raw.guessDeaths as string),
-        guessHearts: Number(raw.guessHearts as string),
-        hours: parseInt(raw.hours as string),
-        minutes: parseInt(raw.minutes as string),
-        seconds: parseInt(raw.seconds as string),
+        guessHearts: numOrUndefined(raw.guessHearts),
+        hours: numOrUndefined(raw.hours),
+        minutes: numOrUndefined(raw.minutes),
+        seconds: numOrUndefined(raw.seconds),
+        guessIsFailing,
     })
 
     if (!parsed.success) {
@@ -72,12 +82,17 @@ export async function submitBet(
         }
     }
 
-    const { hours, minutes, seconds, ...rest } = parsed.data
+    const { hours, minutes, seconds, guessHearts, guessIsFailing: failing, ...rest } = parsed.data
     const newBet: NewBet = {
         twitchUserId,
         username: session.user.name ?? "anon",
         ...rest,
-        guessTime: hours * 3600 + minutes * 60 + seconds,
+        guessIsFailing: failing,
+        // Hearts & time only exist on a kill, so null them for failure-predicters.
+        guessHearts: failing ? null : guessHearts!,
+        guessTime: failing
+            ? null
+            : hours! * 3600 + minutes! * 60 + seconds!,
     }
 
     try {

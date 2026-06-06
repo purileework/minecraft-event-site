@@ -2,7 +2,7 @@
 
 import type { BetFormSchemaType } from "@/lib/schema";
 import { submitBet, type FormState } from "@/actions/bet";
-import { useActionState, useEffect } from "react";
+import { Fragment, useActionState, useEffect, useRef, useState } from "react";
 import {
   McPanel,
   McHeading,
@@ -11,8 +11,16 @@ import {
   McButton,
   mcErrorClass,
 } from "@/components/ui/mc";
-
 const initialState: FormState = {};
+
+// Clamp an uncontrolled number input to [min, max] on blur.
+function clampOnBlur(min: number, max: number) {
+  return (e: React.FocusEvent<HTMLInputElement>) => {
+    const n = parseFloat(e.target.value);
+    if (Number.isNaN(n)) return;
+    e.target.value = String(Math.min(max, Math.max(min, n)));
+  };
+}
 
 function FieldRow({
   label,
@@ -26,7 +34,7 @@ function FieldRow({
   return (
     <div className="border-b border-black/15 py-2">
       <div className="flex items-center justify-between gap-2">
-        <McLabel>{label}</McLabel>
+        <span>{label}</span>
         {children}
       </div>
       {error && <span className={mcErrorClass}>{error}</span>}
@@ -50,6 +58,11 @@ export default function BetForm({
     initialState,
   );
 
+  const [failing, setFailing] = useState<boolean>(
+    state.values?.guessIsFailing === "on" || initial?.guessIsFailing || false,
+  );
+  const failingRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (state.success) onSuccessAction?.();
   }, [state.success, onSuccessAction]);
@@ -65,6 +78,9 @@ export default function BetForm({
           <McInput
             name="guessDeaths"
             className="w-24 text-right"
+            type="number"
+            min={0}
+            required
             defaultValue={state.values?.guessDeaths ?? initial?.guessDeaths}
           />
         </FieldRow>
@@ -76,8 +92,11 @@ export default function BetForm({
             step="0.5"
             min={0}
             max={10}
-            className="w-24 text-right"
+            disabled={failing}
+            className="w-24 text-right disabled:opacity-40"
+            required
             defaultValue={state.values?.guessHearts ?? initial?.guessHearts}
+            onBlur={clampOnBlur(0, 10)}
           />
         </FieldRow>
 
@@ -89,21 +108,54 @@ export default function BetForm({
             state.errors?.seconds?.[0]
           }
         >
-          <div className="flex gap-1">
-            {(["hours", "minutes", "seconds"] as const).map((name) => (
-              <McInput
-                key={name}
-                name={name}
-                className="w-12 text-center"
-                placeholder={name[0]}
-                defaultValue={
-                  state.values?.[name] ??
-                  initial?.[name as keyof BetFormSchemaType]
-                }
-              />
+          <div className="flex items-center gap-1">
+            {(
+              [
+                ["hours", 11],
+                ["minutes", 59],
+                ["seconds", 59],
+              ] as const
+            ).map(([name, max], i) => (
+              <Fragment key={name}>
+                {i > 0 && (
+                  <span className="font-minecraft text-[#fcfcfc]">:</span>
+                )}
+                <McInput
+                  name={name}
+                  type="number"
+                  min={0}
+                  max={max}
+                  required
+                  disabled={failing}
+                  className="w-12 text-center disabled:opacity-40"
+                  placeholder={name[0]}
+                  defaultValue={
+                    state.values?.[name] ??
+                    (initial?.[name] as number | undefined)
+                  }
+                  onBlur={clampOnBlur(0, max)}
+                />
+              </Fragment>
             ))}
           </div>
         </FieldRow>
+
+        <div className="flex cursor-pointer items-center gap-2 border-b border-black/15 py-2">
+          <input
+            ref={failingRef}
+            type="checkbox"
+            name="guessIsFailing"
+            checked={failing}
+            onChange={(e) => setFailing(e.target.checked)}
+            className="h-4 w-4 accent-[#a13b3b]"
+          />
+          <McLabel
+            className="cursor-pointer"
+            onClick={() => failingRef.current?.click()}
+          >
+            I don&apos;t think you&apos;ll beat Jean, no offense :p
+          </McLabel>
+        </div>
 
         <McButton type="submit" disabled={isPending} className="my-4 w-full">
           {isPending ? "Saving..." : "Make Prediction c:"}

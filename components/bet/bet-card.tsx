@@ -22,7 +22,8 @@ export default function BetCard({
     return <>no bets found</>;
   }
 
-  const latestTime = splitTime(bet.latest.guessTime);
+  const failing = bet.latest.guessIsFailing;
+  const latestTime = splitTime(bet.latest.guessTime ?? 0);
   const canEdit = bet.count < 3;
 
   const handleClear = () => {
@@ -42,10 +43,11 @@ export default function BetCard({
           onSuccessAction={() => setEditing(false)}
           initial={{
             guessDeaths: bet.latest.guessDeaths,
-            guessHearts: bet.latest.guessHearts / 2,
+            guessHearts: (bet.latest.guessHearts ?? 0) / 2,
             hours: latestTime.hours,
             minutes: latestTime.minutes,
             seconds: latestTime.seconds,
+            guessIsFailing: failing,
           }}
         />
         =
@@ -70,8 +72,20 @@ export default function BetCard({
             deathCount > bet.latest.guessDeaths && "text-[#ff5555]/60",
           )}
         />
-        <McStat label="Hearts" value={formatHearts(bet.latest.guessHearts)} />
-        <McStat label="Time" value={formatTime(bet.latest.guessTime)} />
+        <McStat
+          label="Hearts"
+          value={
+            failing ? "—" : formatHearts(bet.latest.guessHearts ?? 0)
+          }
+        />
+        <McStat
+          label="Time"
+          value={
+            failing
+              ? "Won't beat it 💀"
+              : formatTime(bet.latest.guessTime ?? 0)
+          }
+        />
       </div>
 
       {!readOnly && (

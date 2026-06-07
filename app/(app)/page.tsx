@@ -101,6 +101,14 @@ export default async function Home() {
         </li>
         <li>4. results revealed after dragon is killed OR 12hrs is up</li>
       </ol>
+      {!isAuthed && !runEnded && (
+        <McPanel className="mt-4 flex flex-col gap-3 p-4">
+          <span className="font-minecraft text-[#fcfcfc] [text-shadow:2px_2px_0_#3e3e3e]">
+            Sign in to place your prediction.
+          </span>
+          <SignInButton />
+        </McPanel>
+      )}
     </>
   );
 

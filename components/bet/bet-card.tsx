@@ -3,20 +3,34 @@
 import { useState, useTransition } from "react";
 import BetForm from "./bet-form";
 import { resetBets, type ViewerBet } from "@/actions/bet";
-import { cn, formatHearts, formatTime, splitTime } from "@/lib/utils";
+import {
+  cn,
+  elapsedRunSeconds,
+  formatHearts,
+  formatTime,
+  splitTime,
+} from "@/lib/utils";
+import { useNow } from "@/lib/use-now";
 import { McPanel, McHeading, McButton, McStat } from "@/components/ui/mc";
 
 export default function BetCard({
   bet,
   readOnly = false,
   deathCount = 0,
+  runStartedAt = null,
+  totalPausedSeconds = 0,
+  pausedAt = null,
 }: {
   bet: ViewerBet;
   readOnly?: boolean;
   deathCount?: number;
+  runStartedAt?: Date | null;
+  totalPausedSeconds?: number;
+  pausedAt?: Date | null;
 }) {
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const now = useNow();
 
   if (bet.count == 0) {
     return <>no bets found</>;
@@ -25,6 +39,11 @@ export default function BetCard({
   const failing = bet.latest.guessIsFailing;
   const latestTime = splitTime(bet.latest.guessTime ?? 0);
   const canEdit = bet.count < 3;
+
+  // Their predicted finish time has already been overtaken by the live run.
+  const elapsed = elapsedRunSeconds(runStartedAt, totalPausedSeconds, pausedAt, now);
+  const timeOver =
+    !failing && bet.latest.guessTime !== null && elapsed > bet.latest.guessTime;
 
   const handleClear = () => {
     startTransition(async () => {
@@ -50,7 +69,6 @@ export default function BetCard({
             guessIsFailing: failing,
           }}
         />
-        =
       </div>
     );
   }
@@ -74,17 +92,14 @@ export default function BetCard({
         />
         <McStat
           label="Hearts"
-          value={
-            failing ? "—" : formatHearts(bet.latest.guessHearts ?? 0)
-          }
+          value={failing ? "—" : formatHearts(bet.latest.guessHearts ?? 0)}
         />
         <McStat
           label="Time"
           value={
-            failing
-              ? "Won't beat it 💀"
-              : formatTime(bet.latest.guessTime ?? 0)
+            failing ? "Won't beat it 💀" : formatTime(bet.latest.guessTime ?? 0)
           }
+          valueClassName={cn(timeOver && "text-[#ff5555]/60")}
         />
       </div>
 
@@ -97,14 +112,15 @@ export default function BetCard({
           >
             Edit
           </McButton>
-          <McButton
+          {/* <McButton
             disabled={isPending}
             onClick={handleClear}
-            className="flex-1"
+            className=
+            "flex-1"
             variant="danger"
           >
             {isPending ? "Clearing..." : "Clear"}
-          </McButton>
+          </McButton> */}
         </div>
       )}
     </McPanel>

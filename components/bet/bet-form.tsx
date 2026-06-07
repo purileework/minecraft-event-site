@@ -11,6 +11,9 @@ import {
   McButton,
   mcErrorClass,
 } from "@/components/ui/mc";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { cn } from "@/lib/utils";
+
 const initialState: FormState = {};
 
 // Clamp an uncontrolled number input to [min, max] on blur.
@@ -63,12 +66,23 @@ export default function BetForm({
   );
   const failingRef = useRef<HTMLInputElement>(null);
 
+  // React 19 resets the <form> DOM after each action. Uncontrolled inputs
+  // re-fill from defaultValue, but the controlled checkbox would desync (DOM
+  // unchecked, state still true) — re-sync it from the returned values when a
+  // new action result arrives (adjust-state-during-render, no effect needed).
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
+    if (state.values) setFailing(state.values.guessIsFailing === "on");
+  }
+
   useEffect(() => {
     if (state.success) onSuccessAction?.();
   }, [state.success, onSuccessAction]);
 
   return (
     <McPanel>
+      <LoadingOverlay show={isPending} label="Submitting bet..." />
       <McHeading className="mb-4">Make a Prediction</McHeading>
 
       {state.error && <p className={mcErrorClass}>{state.error}</p>}
@@ -92,9 +106,8 @@ export default function BetForm({
             step="0.5"
             min={0}
             max={10}
-            disabled={failing}
-            className="w-24 text-right disabled:opacity-40"
-            required
+            required={!failing}
+            className={cn("w-24 text-right", failing && "opacity-40")}
             defaultValue={state.values?.guessHearts ?? initial?.guessHearts}
             onBlur={clampOnBlur(0, 10)}
           />
@@ -125,9 +138,8 @@ export default function BetForm({
                   type="number"
                   min={0}
                   max={max}
-                  required
-                  disabled={failing}
-                  className="w-12 text-center disabled:opacity-40"
+                  required={!failing}
+                  className={cn("w-12 text-center", failing && "opacity-40")}
                   placeholder={name[0]}
                   defaultValue={
                     state.values?.[name] ??

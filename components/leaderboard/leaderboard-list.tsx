@@ -148,7 +148,7 @@ export default function LeaderboardList({
   return (
     <div
       className={cn(
-        "font-minecraft flex min-h-[250px] flex-col overflow-hidden",
+        "font-minecraft flex max-h-[80dvh] min-h-[250px] flex-col overflow-hidden",
         panelSurface,
       )}
     >

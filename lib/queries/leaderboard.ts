@@ -115,9 +115,16 @@ export async function getScoredLeaderboard(): Promise<ScoredLeaderboardRow[]> {
                 guessTime: bet.guessTime,
                 guessIsFailing: bet.guessIsFailing,
                 calledFailure: outcome === "failed" && bet.guessIsFailing,
+                submittedAt: bet.submittedAt,
                 ...score,
             }
         })
-        .sort((a, b) => b.totalScore - a.totalScore)
+        // Highest score first; ties broken by the earlier latest-bet submission
+        // (we score each viewer on their final guess, so its timestamp decides).
+        .sort(
+            (a, b) =>
+                b.totalScore - a.totalScore ||
+                a.submittedAt.getTime() - b.submittedAt.getTime(),
+        )
         .map((row, i) => ({ rank: i + 1, ...row }))
 }

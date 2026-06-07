@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Infinity as InfinityIcon } from "lucide-react";
 import type { LeaderboardRow } from "@/lib/queries/leaderboard";
 import type { LeaderboardSnapshot } from "@/app/api/leaderboard/route";
+import { McPanel } from "@/components/ui/mc";
 import { cn, formatHearts, formatTime } from "@/lib/utils";
 
 const MAX_BETS = 3;
-const POLL_MS = 3000;
+const POLL_MS = 5000;
 
 function Row({ row, deathCount }: { row: LeaderboardRow; deathCount: number }) {
   return (
@@ -55,6 +57,7 @@ export default function LiveLeaderboard({
   initialDeathCount: number;
   initialNetherClosed: boolean;
 }) {
+  const router = useRouter();
   const [rows, setRows] = useState(initialRows);
   const [deathCount, setDeathCount] = useState(initialDeathCount);
   const [netherClosed, setNetherClosed] = useState(initialNetherClosed);
@@ -67,6 +70,12 @@ export default function LiveLeaderboard({
         const res = await fetch("/api/leaderboard", { cache: "no-store" });
         if (!res.ok) return;
         const data: LeaderboardSnapshot = await res.json();
+        // Run just ended: refresh the server component so the page swaps this
+        // live view for the scored leaderboard (and reveals results).
+        if (data.runEnded) {
+          router.refresh();
+          return;
+        }
         setRows(data.rows);
         setDeathCount(data.deathCount);
         setNetherClosed(data.netherClosed);
@@ -77,19 +86,20 @@ export default function LiveLeaderboard({
 
     const id = setInterval(poll, POLL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [router]);
 
   if (netherClosed) {
     return (
-      <div className="font-minecraft text-teal [text-shadow:2px_2px_0_#000]">
-        Poppang has entered the nether. Bets are closed. Let&apos;s see who wins
-        c:
-      </div>
+      <McPanel className="text-teal text-center [text-shadow:2px_2px_0_#000]">
+        Poppang has entered the nether.
+        <br />
+        Pediction changes are closed. Let&apos;s see who wins c:
+      </McPanel>
     );
   }
 
   return (
-    <div className="font-minecraft flex min-h-[250px] flex-col overflow-hidden border-b-8 border-b-[#313233] bg-[#6B6B6E] shadow-[inset_0_0_0_3px_#9C9EA1] outline-[3px] outline-black">
+    <div className="font-minecraft flex max-h-[80dvh] min-h-[250px] flex-col overflow-hidden border-b-8 border-b-[#313233] bg-[#6B6B6E] shadow-[inset_0_0_0_3px_#9C9EA1] outline-[3px] outline-black">
       {/* header pinned above the scroll */}
       <div className="flex items-center gap-2 border-b border-black/40 bg-[#6B6B6E] p-3 pb-1 text-xs tracking-wide text-[#fcfcfc] uppercase shadow-[inset_3px_0_0_0_#9C9EA1,inset_-3px_0_0_0_#9C9EA1,inset_0_3px_0_0_#9C9EA1] [text-shadow:2px_2px_0_#3e3e3e] sm:gap-3 sm:p-4 sm:pb-1 sm:text-sm">
         <span className="min-w-0 flex-1">Player</span>

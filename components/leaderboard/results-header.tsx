@@ -9,9 +9,9 @@ export default function ResultsHeader({ run }: { run: Run }) {
   if (run.runOutcome === "failed") {
     return (
       <div className="flex flex-col gap-2">
-        <McHeading>Results</McHeading>
+        <McHeading>Results :c</McHeading>
         <p className="font-minecraft text-[#ff5555] [text-shadow:2px_2px_0_#3f0000]">
-          💔 The dragon won this time
+          The dragon won this time
         </p>
       </div>
     );
@@ -19,7 +19,7 @@ export default function ResultsHeader({ run }: { run: Run }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <McHeading>Results</McHeading>
+      <McHeading>Results!! :D</McHeading>
       <div className="flex flex-col">
         <McStat label="Deaths" value={String(run.deathCount)} />
         <McStat

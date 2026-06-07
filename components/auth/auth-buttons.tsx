@@ -1,7 +1,8 @@
 import { signIn, signOut } from "@/auth";
-import { McButton } from "@/components/ui/mc";
+import { SubmitOverlayButton } from "@/components/ui/submit-overlay-button";
+import { cn } from "@/lib/utils";
 
-export function SignInButton() {
+export function SignInButton({ className }: { className?: string }) {
   return (
     <form
       action={async () => {
@@ -9,14 +10,17 @@ export function SignInButton() {
         await signIn("twitch", { redirectTo: "/" });
       }}
     >
-      <McButton type="submit" className="w-full">
+      <SubmitOverlayButton
+        overlayLabel="Signing in..."
+        className={cn("w-full", className)}
+      >
         Sign in with Twitch
-      </McButton>
+      </SubmitOverlayButton>
     </form>
   );
 }
 
-export function SignOutButton() {
+export function SignOutButton({ className }: { className?: string }) {
   return (
     <form
       action={async () => {
@@ -24,9 +28,13 @@ export function SignOutButton() {
         await signOut({ redirectTo: "/" });
       }}
     >
-      <McButton type="submit" variant="danger" className="px-3 py-1 text-sm">
+      <SubmitOverlayButton
+        variant="danger"
+        overlayLabel="Signing out..."
+        className={cn("px-3 py-1 text-sm", className)}
+      >
         Sign out
-      </McButton>
+      </SubmitOverlayButton>
     </form>
   );
 }

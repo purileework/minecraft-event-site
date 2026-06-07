@@ -4,6 +4,7 @@ export type LeaderboardSnapshot = {
     rows: Awaited<ReturnType<typeof getLeaderboardBets>>
     deathCount: number
     netherClosed: boolean
+    runEnded: boolean
 }
 
 export async function GET() {
@@ -13,6 +14,7 @@ export async function GET() {
         rows,
         deathCount: run.deathCount,
         netherClosed: run.netherEnterTime !== null,
+        runEnded: run.finishedAt !== null,
     }
 
     return Response.json(snapshot)
